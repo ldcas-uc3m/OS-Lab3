@@ -33,8 +33,18 @@ queue* queue_init(int size){
 
 // To Enqueue an element
 int queue_put(queue *q, struct element* x) {
-	/* We should enqueue only when the queue is not full*/
-	if(queue_full(q) != 1){
+    /* Inserting the first element */
+	if(q->size == 0){
+        /* Assign the element to array at position of the head */
+        q->array[q->head] = *x;
+
+        /* Increment the size */
+        q->size = q->size + 1;
+        return 1;
+    }
+
+    /* We should enqueue when the queue is not full*/
+	else if(queue_full(q) != 1){
 		/* The array works as a circular array, we need to update the head according to the maximum size */
 		q->head = (q->head + 1) % q->max_size;
 
@@ -53,9 +63,18 @@ int queue_put(queue *q, struct element* x) {
 struct element* queue_get(queue *q) {
 	/* Initialize the element to be returned */
     struct element* element;
+    /* Dequeuing when there is just one element */
+    if(q->size == 1){
+        /* Get the element in the tail */
+        element = &q->array[q->tail];
+
+        /* Decrement the size */
+        q->size = q->size - 1;
+        return element;
+    }
 
     /* We can only dequeue if the queue is not empty */
-    if (queue_empty(q) != 1){
+    else if(queue_empty(q) != 1){
 
     	/* Get the element in the tail */
     	element = &q->array[q->tail];
