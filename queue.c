@@ -43,6 +43,7 @@ int queue_put(queue *q, struct element* x) {
 
 		/* Increment the size */
 		q->size = q->size + 1;
+        return 1
 	}
     return 0;
 }
@@ -64,8 +65,9 @@ struct element* queue_get(queue *q) {
 
     	/* Decrement the size */
     	q->size = q->size - 1;
+        return element;
     }
-    return element;
+    return 0
 }
 
 
