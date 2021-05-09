@@ -41,6 +41,7 @@ int bSize;
 int producers;
 int num_Operations = -1;
 int operations_producer = 0;
+int buff_size = 0;
 int total;
 DATA_MACHINE* array_Operations;
 pthread_mutex_t mutex;
@@ -122,7 +123,7 @@ int check_Params(const char* sProducers,const char* sbSize){
 }
 
 
-int consumer(){
+void consumer(){
     /*
     Consumer function.
     Takes all the elements from the queue and calculates the cost.
@@ -130,10 +131,14 @@ int consumer(){
     @return int accum: accumulated cost
     */
     int accum = 0; // accumulator
+    pthread_mutex_lock(&mutex);
+
+    while(buff_size == 0){
+        pthread_cond_wait(&cond_empty, &mutex);
+    }
+
     while (!queue_empty(buff_q)){
         struct element *current = queue_get(buff_q); // get elemet
-
-        
         int cost;
         /* cost calculator */
         switch (current->type){
@@ -152,7 +157,12 @@ int consumer(){
         }
         accum += cost * current->time;
     }
-    return accum;
+    total = total + accum;
+
+    pthread_cond_signal(&cond_full);
+    pthread_mutex_unlock(&mutex);
+
+    return;
 }
 
 
@@ -162,14 +172,23 @@ void producer(int num_execution){
     Inserts the data into the queue
     */
     for(int i = 0; i <= operations_producer; i++){
+
+        pthread_mutex_lock(&mutex);
+
+        while(buff_q->size == buff_size){
+            pthread_cond_wait(&cond_full, &mutex);
+        }
+
         DATA_MACHINE current = array_Operations[(num_execution * operations_producer) + i]; // extract element
         struct element *new_element; // element to be inserted on queue
 
         new_element->type = current.machine_Type; // insert type
         new_element->time = current.machine_Time;
 
-        
         queue_put(buff_q, new_element);
+        pthread_cond_signal(&cond_empty);
+
+        pthread_mutex_unlock(&mutex);
     }
 
     return;
@@ -220,7 +239,7 @@ int main (int argc, const char * argv[]){
     }
 
     int num_Producers = atoi(argv[2]);
-    int buff_size = atoi(argv[3]);
+    buff_size = atoi(argv[3]);
 
     /* ---
     THREAD CREATION
@@ -248,8 +267,51 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 	
+    for (i = 0; i < num_Producers; i++){
+        if (pthread_create(&producers[i], NULL, producer, i) < 0){
+            perror("Error when creating the thread");
+            exit(-1);
+        }
+    }
+
+    if (pthread_create(&consumer, NULL, consumer, NULL) < 0){
+        perror("Error when creating the thread");
+        exit(-1);
+    }
+
+    for (i = 0; i < num_Producers; i++){
+        if (pthread_join(&producers[i], NULL) < 0){
+            perror("Error when waiting thread");
+            exit(-1);
+        }
+    }
+
+    if (pthread_join(&consumer, NULL) < 0){
+        perror("Error when waiting the thread");
+        exit(-1);
+    }
+
+    queue_destroy(buff_q);
+    if (pthread_mutex_destroy(&mutex) < 0){
+        perror("Error when destroying mutex");
+        exit(-1);
+    }
+
+    if (pthread_cond_destroy(&cond_full) < 0){
+        perror("Error when destroying condition");
+        exit(-1);
+    }
+
+    if (pthread_cond_destroy(&cond_empty) < 0){
+        perror("Error when destroying condition");
+        exit(-1);
+    }
+
+
+
+
     /* output */
-	printf("%i", total);
+	printf("Total: %i €.\n", total);
 	return 0;
 }
      
