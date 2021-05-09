@@ -41,7 +41,7 @@ int num_Operations = -1;
 int operations_producer = 0;
 int buff_size = 0;
 int total;
-DATA_MACHINE* array_Operations;
+DATA_MACHINE* array_Operations[];
 pthread_mutex_t mutex;
 pthread_cond_t cond_full;
 pthread_cond_t cond_empty;
