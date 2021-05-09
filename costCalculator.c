@@ -166,7 +166,7 @@ void consumer(){
 }
 
 
-void producer(int num_execution){
+void producer(int *num_execution){
     /*
     Producer function.
     Inserts the data into the queue
@@ -257,7 +257,7 @@ int main (int argc, const char * argv[]){
     }
 	
     for (int i = 0; i < num_Producers; i++){
-        if (pthread_create(&producers[i], NULL, (void *)producer, *i) < 0){
+        if (pthread_create(&producers[i], NULL, (void *)producer, &i) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
@@ -269,13 +269,13 @@ int main (int argc, const char * argv[]){
     }
 
     for (int i = 0; i < num_Producers; i++){
-        if (pthread_join(&producers[i], NULL) < 0){
+        if (pthread_join(producers[i], NULL) < 0){
             perror("Error when waiting thread");
             exit(-1);
         }
     }
 
-    if (pthread_join(&consumer_t, NULL) < 0){
+    if (pthread_join(consumer_t, NULL) < 0){
         perror("Error when waiting the thread");
         exit(-1);
     }
