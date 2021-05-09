@@ -179,11 +179,7 @@ void producer(int *num_execution){
             pthread_cond_wait(&cond_full, &mutex);
         }
 
-        
-        struct element *new_element; // element to be inserted on queue
-
-        new_element->type = current.machine_Type; // insert type
-        new_element->time = current.machine_Time;
+       
 
         queue_put(buff_q, new_element);
         pthread_cond_signal(&cond_empty);
