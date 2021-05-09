@@ -40,6 +40,7 @@ const char *fNameData;
 int bSize;
 int producers;
 int num_Operations = -1;
+int operations_producer = 0;
 int total;
 DATA_MACHINE* array_Operations;
 pthread_mutex_t mutex;
@@ -158,6 +159,14 @@ void producer(int num_execution){
     Producer function.
     Inserts the data into the queue
     */
+    for(int i = 0; i <= operations_producer; i++){
+        DATA_MACHINE *current = array_Operations[(num_execution * operations_producer) + i]; // extract element
+        struct element *new_element; // element to be inserted on queue
+        new_element->type = current.machine_Type; // insert type
+        new_element->time = current.machine_Time;
+        
+        queue_put(buff_q, new_element);
+    }
 
     return;
 }
@@ -216,7 +225,7 @@ int main (int argc, const char * argv[]){
     pthread_t producers[num_Producers]; // as many threads as producers
     pthread_t consumer;
 
-    int operations_producer = (buff_size/num_Producers); // Number of operations each producer will do
+    operations_producer = (buff_size/num_Producers); // Number of operations each producer will do
 
     buff_q = queue_init(buff_size);
 
