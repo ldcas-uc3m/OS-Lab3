@@ -171,7 +171,7 @@ void producer(int *num_execution){
     Producer function.
     Inserts the data into the queue
     */
-    for(int i = 0; i <= operations_producer; i++){
+    for(int i = 0; i < operations_producer; i++){
 
         pthread_mutex_lock(&mutex);
 
