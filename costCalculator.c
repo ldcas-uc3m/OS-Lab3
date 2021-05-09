@@ -16,16 +16,49 @@
 
 
 
-/**
- * Entry point
- * @param argc
- * @param argv
- * @return
- */
-int main (int argc, const char * argv[] ) {
+int main (int argc, const char * argv[] ){
+    /*
+    Entry point
+    @param int argc: argument counter
+    @param char *argv: argument vector
+    @return 0
+    */
 
     int total = 0;
     printf("Total: %i €.\n", total);
 
     return 0;
+}
+
+int consumer(struct queue *q){
+    /*
+    Consumer function.
+    Takes all the elements from the queue and calculates the cost.
+
+    @param struct queue *q: circular buffer queue
+    @return int accum: accumulated cost
+    */
+    int accum = 0; // accumulator
+    while (!queue_empty(q)){
+        struct element *current = queue_get(q); // get elemet
+
+        /* cost calculator */
+        switch (current->type){
+        case 1: /* common node */
+            int cost = 1; // ($/min)
+            break;
+        case 2: /* computer node */
+            int cost = 3;
+            break;
+        case 3: /* supercomputer node */
+            int cost = 10;
+            break;
+        default:
+            perror("Wrong type of an element");
+            break;
+        }
+        accum += cost * current->time;
+    }
+
+    return accum;
 }
