@@ -195,17 +195,6 @@ void producer(int num_execution){
 }
 
 
-/*
-void test_Load_Array(void){
-  int i;
-  
-    for (i=0; i<num_Operations; i++){
-        printf("ID:%d, TYPE:%d, TIME: %d\n",array_Operations[i].machine_ID,array_Operations[i].machine_Type,array_Operations[i].machine_Time);
-	}
-    printf("num_Operations:%d\n", i);
-}
-*/
-
 
 int main (int argc, const char * argv[]){
 	/*
@@ -268,7 +257,7 @@ int main (int argc, const char * argv[]){
     }
 	
     for (int i = 0; i < num_Producers; i++){
-        if (pthread_create(&producers[i], NULL, (void *)producer, i) < 0){
+        if (pthread_create(&producers[i], NULL, (void *)producer, *i) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
