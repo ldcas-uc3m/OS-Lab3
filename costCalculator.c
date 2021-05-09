@@ -179,7 +179,13 @@ void producer(int *num_execution){
             pthread_cond_wait(&cond_full, &mutex);
         }
 
-       
+        DATA_MACHINE current = array_Operations[(*num_execution * operations_producer) + i]; // extract element
+        struct element *new_element; // element to be inserted on queue
+
+        new_element->type = current.machine_Type; // insert type
+        new_element->time = current.machine_Time;
+
+        queue_put(buff_q, new_element);
         pthread_cond_signal(&cond_empty);
 
         pthread_mutex_unlock(&mutex);
@@ -212,8 +218,6 @@ int main (int argc, const char * argv[]){
     	perror ("Wrong parameters introduced");
     	return -1;
     }
-
-    printf("Antes del load");
 
     /* load file */
     if (load_fData() == -1){
