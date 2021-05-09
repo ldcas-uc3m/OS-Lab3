@@ -133,16 +133,18 @@ int consumer(){
     while (!queue_empty(buff_q)){
         struct element *current = queue_get(buff_q); // get elemet
 
+        
+        int cost;
         /* cost calculator */
         switch (current->type){
         case 1: /* common node */
-            int cost = 1; // ($/min)
+            cost = 1; // ($/min)
             break;
         case 2: /* computer node */
-            int cost = 3;
+            cost = 3;
             break;
         case 3: /* supercomputer node */
-            int cost = 10;
+            cost = 10;
             break;
         default:
             perror("Wrong type of an element");
@@ -160,10 +162,12 @@ void producer(int num_execution){
     Inserts the data into the queue
     */
     for(int i = 0; i <= operations_producer; i++){
-        DATA_MACHINE *current = array_Operations[(num_execution * operations_producer) + i]; // extract element
+        DATA_MACHINE current = array_Operations[(num_execution * operations_producer) + i]; // extract element
         struct element *new_element; // element to be inserted on queue
+
         new_element->type = current.machine_Type; // insert type
         new_element->time = current.machine_Time;
+
         
         queue_put(buff_q, new_element);
     }
