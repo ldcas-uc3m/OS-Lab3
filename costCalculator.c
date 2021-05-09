@@ -162,7 +162,7 @@ void consumer(){
     pthread_cond_signal(&cond_full);
     pthread_mutex_unlock(&mutex);
 
-    return;
+    pthread_exit(0);
 }
 
 
@@ -191,7 +191,7 @@ void producer(int *num_execution){
         pthread_mutex_unlock(&mutex);
     }
 
-    return;
+    pthread_exit(0);
 }
 
 
