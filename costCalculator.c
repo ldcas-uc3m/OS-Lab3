@@ -37,8 +37,6 @@ Global Variables
 --- */
 
 const char *fNameData;
-int bSize;
-int check_producers;
 int num_Operations = -1;
 int operations_producer = 0;
 int buff_size = 0;
@@ -108,6 +106,8 @@ int check_Params(const char* sProducers,const char* sbSize){
 
     @returns: 0 if no error, -1 on error
     */
+    int bSize;
+    int check_producers;
     check_producers = atoi(sProducers);
 
     if (check_producers <= 0){
@@ -208,8 +208,6 @@ int main (int argc, const char * argv[]){
     fNameData = argv[1];
     num_Operations = -1;
     array_Operations = NULL;
-    check_producers = 0;
-    bSize = 0;
 
     /* check parameters */
 	if (argc != 4){
@@ -220,6 +218,8 @@ int main (int argc, const char * argv[]){
     	perror ("Wrong parameters introduced");
     	return -1;
     }
+
+    printf("Antes del load");
 
     /* load file */
     if (load_fData() == -1){
@@ -295,9 +295,6 @@ int main (int argc, const char * argv[]){
         perror("Error when destroying condition");
         exit(-1);
     }
-
-
-
 
     /* output */
 	printf("Total: %i €.\n", total);
