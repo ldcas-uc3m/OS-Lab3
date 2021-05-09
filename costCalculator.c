@@ -37,6 +37,8 @@ Global Variables
 --- */
 
 const char *fNameData;
+int bSize;
+int check_producers;
 int num_Operations = -1;
 int operations_producer = 0;
 int buff_size = 0;
@@ -106,8 +108,6 @@ int check_Params(const char* sProducers,const char* sbSize){
 
     @returns: 0 if no error, -1 on error
     */
-    int bSize;
-    int check_producers;
     check_producers = atoi(sProducers);
 
     if (check_producers <= 0){
@@ -171,6 +171,7 @@ void producer(int *num_execution){
     Producer function.
     Inserts the data into the queue
     */
+  
     for(int i = 0; i < operations_producer; i++){
 
         pthread_mutex_lock(&mutex);
@@ -179,16 +180,40 @@ void producer(int *num_execution){
             pthread_cond_wait(&cond_full, &mutex);
         }
 
+
+
+        // ------------------------------------------------
+        // EN ALGUNOS CASOS   (*num_execution * operations_producer) + i GENERA UN VALOR ERRONEO CON EL QUE NO SE PUEDE INDEXAR EN array_Operations
+        // ------------------------------------------------
+        long int index;
+        //printf("*num_execution: %d\n",*num_execution);
+        //printf("operations_producers: %d\n",operations_producer);
+        //printf("i: %d\n",i);
+        index = (*num_execution * operations_producer) + i;
+        
+
+        if ( index>0 && index<num_Operations) {
+
         DATA_MACHINE current = array_Operations[(*num_execution * operations_producer) + i]; // extract element
-        struct element *new_element; // element to be inserted on queue
+        //struct element *new_element; // element to be inserted on queue
 
-        new_element->type = current.machine_Type; // insert type
-        new_element->time = current.machine_Time;
+        //new_element->type = current.machine_Type; // insert type
+        //new_element->time = current.machine_Time;
 
-        queue_put(buff_q, new_element);
+        struct element new_element; // element to be ins     erted on queue
+
+        new_element.type = current.machine_Type; // insert type
+        new_element.time = current.machine_Time;
+        queue_put(buff_q, &new_element);
+       }
+    else {
+    printf("ERROR DE INDICE: %ld\n",index);
+    }
+        //queue_put(buff_q, new_element);
         pthread_cond_signal(&cond_empty);
 
         pthread_mutex_unlock(&mutex);
+ 
     }
 
     pthread_exit(0);
@@ -208,7 +233,10 @@ int main (int argc, const char * argv[]){
     fNameData = argv[1];
     num_Operations = -1;
     array_Operations = NULL;
+    check_producers = 0;
+    bSize = 0;
 
+    printf("Paso 1\n");
     /* check parameters */
 	if (argc != 4){
       	perror("Wrong number of parameters");
@@ -224,7 +252,7 @@ int main (int argc, const char * argv[]){
        	perror("Error loading data from file");
        	return -1;
     }
-
+    printf("Paso 2\n");
     int num_Producers = atoi(argv[2]);
     buff_size = atoi(argv[3]);
 
@@ -235,9 +263,12 @@ int main (int argc, const char * argv[]){
     pthread_t producers[num_Producers]; // as many threads as producers
     pthread_t consumer_t;
 
-    operations_producer = (buff_size / num_Producers); // Number of operations each producer will do
-
+    operations_producer = (buff_size/num_Producers); // Number of operations each producer will do
+   
+    printf("Paso 3\n");
+    
     buff_q = queue_init(buff_size);
+    printf("Paso 4\n");
 
    	if (pthread_mutex_init(&mutex, NULL) < 0){
         perror("Error initializing mutex");
@@ -254,6 +285,8 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 	
+
+    printf("Paso 5\n");
     for (int i = 0; i < num_Producers; i++){
         if (pthread_create(&producers[i], NULL, (void *)producer, &i) < 0){
             perror("Error when creating the thread");
@@ -261,38 +294,47 @@ int main (int argc, const char * argv[]){
         }
     }
 
+    printf("Paso 6\n");
     if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
         perror("Error when creating the thread");
         exit(-1);
     }
 
+    printf("Paso 7\n");
     for (int i = 0; i < num_Producers; i++){
-        if (pthread_join(producers[i], NULL) < 0){
-            perror("Error when waiting thread");
-            exit(-1);
-        }
-    }
+         if (pthread_join(producers[i], NULL) < 0){
+             perror("Error when waiting thread");
+             exit(-1);
+         }
+     }
 
+    printf("Paso 8\n");
     if (pthread_join(consumer_t, NULL) < 0){
         perror("Error when waiting the thread");
         exit(-1);
     }
 
+    printf("Paso 9\n");
     queue_destroy(buff_q);
     if (pthread_mutex_destroy(&mutex) < 0){
         perror("Error when destroying mutex");
         exit(-1);
     }
 
+    printf("Paso 10\n");
     if (pthread_cond_destroy(&cond_full) < 0){
         perror("Error when destroying condition");
         exit(-1);
     }
 
+    printf("Paso 11\n");
     if (pthread_cond_destroy(&cond_empty) < 0){
         perror("Error when destroying condition");
         exit(-1);
     }
+
+    printf("Paso 12\n");
+
 
     /* output */
 	printf("Total: %i €.\n", total);
