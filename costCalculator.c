@@ -180,8 +180,6 @@ void producer(int *num_execution){
         }
 
        
-
-        queue_put(buff_q, new_element);
         pthread_cond_signal(&cond_empty);
 
         pthread_mutex_unlock(&mutex);
