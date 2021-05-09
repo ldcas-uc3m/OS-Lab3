@@ -41,7 +41,7 @@ int num_Operations = -1;
 int operations_producer = 0;
 int buff_size = 0;
 int total;
-DATA_MACHINE* array_Operations[];
+DATA_MACHINE* array_Operations;
 pthread_mutex_t mutex;
 pthread_cond_t cond_full;
 pthread_cond_t cond_empty;
@@ -179,13 +179,7 @@ void producer(int *num_execution){
             pthread_cond_wait(&cond_full, &mutex);
         }
 
-        DATA_MACHINE current = array_Operations[(*num_execution * operations_producer) + i]; // extract element
-        struct element *new_element; // element to be inserted on queue
-
-        new_element->type = current.machine_Type; // insert type
-        new_element->time = current.machine_Time;
-
-        queue_put(buff_q, new_element);
+        
         pthread_cond_signal(&cond_empty);
 
         pthread_mutex_unlock(&mutex);
@@ -224,6 +218,8 @@ int main (int argc, const char * argv[]){
        	perror("Error loading data from file");
        	return -1;
     }
+
+    printf("%d", sizeof(array_Operations));
 
     int num_Producers = atoi(argv[2]);
     buff_size = atoi(argv[3]);
