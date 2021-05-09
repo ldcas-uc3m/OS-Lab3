@@ -2,9 +2,10 @@
 #define HEADER_FILE
 
 
-struct element {
-  int type; //Machine type
-  int time; //Using time
+struct element{
+	/* Element of the queue*/
+  	int type; // Machine type
+  	int time; // Usage time
 };
 
 typedef struct queue {
