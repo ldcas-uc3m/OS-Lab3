@@ -100,3 +100,4 @@ We provide a file “ssoo_p3_initial_code.zip”. When decompressed, a “./ssoo
 
 ## Lab	results	verification
 Along with the support code, a “checker.csv” file is attached, which is an excel document to check if the cost results obtained are correct or not. The file "file.txt" provided contains the same data as the first one, but without formulas and checks (it has the specified format to be able to process it). If the number of operations to be processed in "file.txt" is modified, the result obtained can be checked by modifying the number of operations in the document "checker.csv".
+``$ ./corrector_ssoo_p3.sh ssoo_p3_100428997_100429021_100429063.zip``
