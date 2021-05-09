@@ -10,22 +10,6 @@
 #include <sys/wait.h>
 #include "queue.h"
 
-
-/* ---
-GLOBAL DEFINITIONS
---- */
-
-#define NUM_CONSUMERS            1    // Number of consumers
-
-#define RESULT_OK                0    // General Ok return of funtcion
-#define RESULT_ER                1    // General ERROR return of function
-#define RESULT_ER_FILE           2    // General ERROR of file return of function
-#define RESULT_ER_NUM_OPERATIONS 3
-#define RESULT_ER_PRODUCERS      4
-#define RESULT_ER_BSIZE          5
-
-#define MAX_BUFFER               255  // Generic buffer for operations
-
 /* --- 
 TYPE & STRUCT DEFINITION
 --- */
@@ -38,7 +22,14 @@ struct S_DATA_MACHINE{
 
 typedef struct S_DATA_MACHINE DATA_MACHINE;
 
-#define SIZE_DATA_MACHINE   sizeof(DATA_MACHINE)
+
+/* ---
+GLOBAL DEFINITIONS
+--- */
+
+#define NUM_CONSUMERS            1                    // Number of consumers
+#define MAX_BUFFER               255                  // Generic buffer for operations
+#define SIZE_DATA_MACHINE        sizeof(DATA_MACHINE) // Size of a DATA_MACHINE structure
 
 
 /* ---
@@ -54,7 +45,7 @@ DATA_MACHINE* array_Operations;
 pthread_mutex_t mutex;
 pthread_cond_t cond_full;
 pthread_cond_t cond_empty;
-struct queue *queue;
+struct queue *buff_q;
 
 
 int load_fData(void){
@@ -63,14 +54,12 @@ int load_fData(void){
 
     @returns: 0 if no error, -1 on error
     */
-    int   result;
+
     FILE* fpData;
     int   max_Operations;
     int   nBytes;
     char  buff[MAX_BUFFER];
   
-
-    result = RESULT_ER_FILE;
     fpData = fopen(fNameData, "r");
 
     if (fpData != NULL){ // open OK, load file
@@ -137,12 +126,11 @@ int consumer(){
     Consumer function.
     Takes all the elements from the queue and calculates the cost.
 
-    @param struct queue *q: circular buffer queue
     @return int accum: accumulated cost
     */
     int accum = 0; // accumulator
-    while (!queue_empty(queue)){
-        struct element *current = queue_get(queue); // get elemet
+    while (!queue_empty(buff_q)){
+        struct element *current = queue_get(buff_q); // get elemet
 
         /* cost calculator */
         switch (current->type){
@@ -166,6 +154,10 @@ int consumer(){
 
 
 void producer(int num_execution){
+    /*
+    Producer function.
+    Inserts the data into the queue
+    */
 
     return;
 }
@@ -226,7 +218,7 @@ int main (int argc, const char * argv[]){
 
     int operations_producer = (buff_size/num_Producers); // Number of operations each producer will do
 
-    queue = queue_init(buff_size);
+    buff_q = queue_init(buff_size);
 
    	if (pthread_mutex_init(&mutex, NULL) < 0){
         perror("Error initializing mutex");

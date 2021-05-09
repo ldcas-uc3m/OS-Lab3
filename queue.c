@@ -1,6 +1,3 @@
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -8,15 +5,15 @@
 #include "queue.h"
 
 
-
-//To create a queue
 queue* queue_init(int size){
-	/* Reserve memory for the queue */
-    queue * q = (queue *)malloc(sizeof(queue));
+	/*
+    Reserves memory for the queue, and initializes the queue
 
-    /* Reserve memory for the array, we have to reserve maximum number of elements 
-    the queue can have times the size of each element that is an structure*/
-    q->array = malloc(size * sizeof(struct element));
+    @param int size: size of the queue
+    */
+    queue *q = (queue *)malloc(sizeof(queue)); // allocate queue
+
+    q->array = malloc(size * sizeof(struct element)); // allocate for elements
 
     /* As the queue is initially empty the head and the tail are set to position 0*/
     q->head = 0;
@@ -31,85 +28,101 @@ queue* queue_init(int size){
 }
 
 
-// To Enqueue an element
-int queue_put(queue *q, struct element* x) {
-    /* Inserting the first element */
+int queue_put(queue *q, struct element *x){
+    /*
+    Introduces an element into the queue
+    
+    @param queue *q: queue
+    @param struct element *x: element to be stored
+    @return: 0 on exit, -1 on fail
+    */
+    
 	if(q->size == 0){
-        /* Assign the element to array at position of the head */
-        q->array[q->head] = *x;
+        /* first element, head stays */
+        q->array[q->head] = *x; // Assign the element to array at position of the head
+        q->size = q->size + 1; // Increment the size
 
-        /* Increment the size */
-        q->size = q->size + 1;
-        return 1;
+        return 0;
     }
 
-    /* We should enqueue when the queue is not full*/
 	else if(queue_full(q) != 1){
-		/* The array works as a circular array, we need to update the head according to the maximum size */
-		q->head = (q->head + 1) % q->max_size;
+        /* new element */
+		// The array works as a circular array, we need to update the head according to the maximum size
 
-		/* Assign the element to array at position of the head */
-		q->array[q->head] = *x;
+		q->head = (q->head + 1) % q->max_size; // move head
+		q->array[q->head] = *x; // Assign the element to array at position of the head
+		q->size = q->size + 1; // Increment the size
 
-		/* Increment the size */
-		q->size = q->size + 1;
-        return 1
+        return 0;
 	}
-    return 0;
+    return -1;
 }
 
 
-// To Dequeue an element.
-struct element* queue_get(queue *q) {
-	/* Initialize the element to be returned */
-    struct element* element;
+struct element* queue_get(queue *q){
+	/*
+    Dequeues the tail element
+    
+    @param queue *q: queue
+    @return: struct element *element, -1 on fail
+    */
+
+   /* Initialize the element to be returned */
+    struct element *new_element;
     /* Dequeuing when there is just one element */
     if(q->size == 1){
-        /* Get the element in the tail */
-        element = &q->array[q->tail];
-
-        /* Decrement the size */
-        q->size = q->size - 1;
-        return element;
+        /* Only one element, tail static */
+        new_element = &q->array[q->tail]; // Get the element in the tail
+        q->size = q->size - 1; // Decrement the size
+        return new_element;
     }
 
-    /* We can only dequeue if the queue is not empty */
     else if(queue_empty(q) != 1){
-
-    	/* Get the element in the tail */
-    	element = &q->array[q->tail];
-
-    	/* Update the tail, as the array is a circular array we use the remainder and the maximum size*/
-    	q->tail = (q->tail + 1) % q->max_size;
-
-    	/* Decrement the size */
+        /* dequeue */
+    	new_element = &q->array[q->tail];
+    	// as the array is a circular array we use the remainder and the maximum size
+    	q->tail = (q->tail + 1) % q->max_size; // Update the tail
     	q->size = q->size - 1;
-        return element;
+
+        return new_element;
     }
-    return 0
+    return -1;
 }
 
 
-//To check queue state
 int queue_empty(queue *q){
-	/* Retrun 1 if the queue is empty, otherwise return 0 */
+	/* 
+    Checks whether or not the queue is empty
+
+    @return: 1 if the queue is empty, otherwise 0
+    */
+
 	if (q->size == 0){
 		return 1;
 	}
     return 0;
 }
 
+
 int queue_full(queue *q){
-	/* Retrun 1 if the queue is full, otherwise return 0 */
+	/* 
+    Checks whether the queue is full
+
+    @return: 1 if the queue is full, otherwise 0
+    */
     if (q->size == q->max_size){
 		return 1;
 	}
     return 0;
 }
 
-//To destroy the queue and free the resources
+
 int queue_destroy(queue *q){
-	/* Free the queue */
+	/*
+    Frees the queue
+    
+    @param queue *q: queue
+    */
 	free(q);
     return 0;
 }
