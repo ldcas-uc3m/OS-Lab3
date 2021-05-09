@@ -179,7 +179,7 @@ void producer(int *num_execution){
             pthread_cond_wait(&cond_full, &mutex);
         }
 
-        DATA_MACHINE current = array_Operations[i]; // extract element
+        DATA_MACHINE current = array_Operations[1]; // extract element
         struct element *new_element; // element to be inserted on queue
 
         new_element->type = current.machine_Type; // insert type
@@ -235,7 +235,7 @@ int main (int argc, const char * argv[]){
     pthread_t producers[num_Producers]; // as many threads as producers
     pthread_t consumer_t;
 
-    operations_producer = (buff_size/num_Producers); // Number of operations each producer will do
+    operations_producer = (buff_size / num_Producers); // Number of operations each producer will do
 
     buff_q = queue_init(buff_size);
 
