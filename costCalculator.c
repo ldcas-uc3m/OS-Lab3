@@ -38,7 +38,7 @@ Global Variables
 
 const char *fNameData;
 int bSize;
-int producers;
+int check_producers;
 int num_Operations = -1;
 int operations_producer = 0;
 int buff_size = 0;
@@ -108,9 +108,9 @@ int check_Params(const char* sProducers,const char* sbSize){
 
     @returns: 0 if no error, -1 on error
     */
-    producers = atoi(sProducers);
+    check_producers = atoi(sProducers);
 
-    if (producers <= 0){
+    if (check_producers <= 0){
         return -1;
     }
     else{
@@ -267,19 +267,19 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 	
-    for (i = 0; i < num_Producers; i++){
-        if (pthread_create(&producers[i], NULL, producer, i) < 0){
+    for (int i = 0; i < num_Producers; i++){
+        if (pthread_create(&producers[i], NULL, (void *)producer, i) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
     }
 
-    if (pthread_create(&consumer, NULL, consumer, NULL) < 0){
+    if (pthread_create(&consumer, NULL, (void *)consumer, NULL) < 0){
         perror("Error when creating the thread");
         exit(-1);
     }
 
-    for (i = 0; i < num_Producers; i++){
+    for (int i = 0; i < num_Producers; i++){
         if (pthread_join(&producers[i], NULL) < 0){
             perror("Error when waiting thread");
             exit(-1);
