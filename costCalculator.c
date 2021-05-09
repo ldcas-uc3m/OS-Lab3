@@ -219,7 +219,7 @@ int main (int argc, const char * argv[]){
     fNameData = argv[1];
     num_Operations = -1;
     array_Operations = NULL;
-    producers = 0;
+    check_producers = 0;
     bSize = 0;
 
     /* check parameters */
@@ -246,7 +246,7 @@ int main (int argc, const char * argv[]){
     --- */
 
     pthread_t producers[num_Producers]; // as many threads as producers
-    pthread_t consumer;
+    pthread_t consumer_t;
 
     operations_producer = (buff_size/num_Producers); // Number of operations each producer will do
 
@@ -274,7 +274,7 @@ int main (int argc, const char * argv[]){
         }
     }
 
-    if (pthread_create(&consumer, NULL, (void *)consumer, NULL) < 0){
+    if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
         perror("Error when creating the thread");
         exit(-1);
     }
@@ -286,7 +286,7 @@ int main (int argc, const char * argv[]){
         }
     }
 
-    if (pthread_join(&consumer, NULL) < 0){
+    if (pthread_join(&consumer_t, NULL) < 0){
         perror("Error when waiting the thread");
         exit(-1);
     }
