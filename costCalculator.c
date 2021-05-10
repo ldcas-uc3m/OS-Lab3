@@ -308,7 +308,7 @@ int main (int argc, const char * argv[]){
     for (int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
 
         fragments[producer_numb].begin_position = producer_numb * operations_producer;
-        fragments[producer_number].end_position = (procuder_numb + 1) * operations_producer;
+        fragments[producer_numb].end_position = (procuder_numb + 1) * operations_producer;
 
         if (pthread_create(&producers[producer_numb], NULL, (void *)producer, &fragments[i]) < 0){
             perror("Error when creating the thread");
