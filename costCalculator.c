@@ -264,7 +264,7 @@ int main (int argc, const char * argv[]){
     pthread_t producers[num_Producers]; // as many threads as producers
     pthread_t consumer_t;
 
-    operations_producer = (max_Operations/num_Producers); // Number of operations each producer will do
+    operations_producer = floor(max_Operations/num_Producers); // Number of operations each producer will do
    
     printf("Paso 3\n");
     
