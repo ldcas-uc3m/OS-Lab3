@@ -191,6 +191,7 @@ void producer(int *producer_number){
         //printf("operations_producers: %d\n",operations_producer);
         //printf("i: %d\n",i);
         index = (*producer_number * operations_producer) + i;
+        print("%ld\n", index);
         
 
         if ( index>0 && index<num_Operations) {
