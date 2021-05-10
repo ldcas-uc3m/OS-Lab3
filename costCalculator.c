@@ -301,9 +301,15 @@ int main (int argc, const char * argv[]){
             perror("Error when creating the thread");
             exit(-1);
         }
+        for (int i = 0; i < num_Producers+1; i++){
+            if (pthread_join(producers[i], NULL) < 0){
+                perror("Error when waiting thread");
+                exit(-1);
+            }
+        }
     }
 
-    } else{
+    else{
         struct fragment fragments[num_Producers];
         pthread_t producers[num_Producers]; // as many threads as producers
 
@@ -319,6 +325,12 @@ int main (int argc, const char * argv[]){
                 exit(-1);
             }
         }
+        for (int i = 0; i < num_Producers; i++){
+            if (pthread_join(producers[i], NULL) < 0){
+                perror("Error when waiting thread");
+                exit(-1);
+            }
+        }
     }
 
     
@@ -326,12 +338,7 @@ int main (int argc, const char * argv[]){
     DESTROY THREADS AND MUTEX
     --- */
 
-    for (int i = 0; i < num_Producers; i++){
-        if (pthread_join(producers[i], NULL) < 0){
-            perror("Error when waiting thread");
-            exit(-1);
-        }
-    }
+    
 
     if (pthread_join(consumer_t, NULL) < 0){
         perror("Error when waiting the thread");
