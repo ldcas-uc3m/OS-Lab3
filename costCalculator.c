@@ -134,7 +134,7 @@ void *consumer(){
         int accum = 0; // accumulator
         pthread_mutex_lock(&mutex);
 
-        while(buff_q -> size == 0){
+        while(buff_q->size == 0){
             pthread_cond_wait(&cond_empty, &mutex);
         }
 
