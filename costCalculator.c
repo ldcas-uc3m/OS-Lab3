@@ -172,7 +172,7 @@ void *producer(int *producer_number){
     Producer function.
     Inserts the data into the queue
     */
-    printf("%d\n", operations_producer);
+    printf("oppp %d\n", operations_producer);
   
     for(int i = 0; i < operations_producer; i++){
 
@@ -267,12 +267,9 @@ int main (int argc, const char * argv[]){
     pthread_t producers[num_Producers]; // as many threads as producers
     pthread_t consumer_t;
 
-    printf("producers: %d\n", num_Producers);
-    printf("oppp: %d\n", operations_producer);
 
     operations_producer = max_Operations / num_Producers; // Number of operations each producer will do
 
-    printf("oppp: %d\n", operations_producer);
    
     printf("Paso 3\n");
     
