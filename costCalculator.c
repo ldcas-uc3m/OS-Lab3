@@ -42,6 +42,7 @@ int check_producers;
 int num_Operations = -1;
 int operations_producer = 0;
 int buff_size = 0;
+int max_Operations = 0;
 int total;
 DATA_MACHINE* array_Operations;
 pthread_mutex_t mutex;
@@ -58,7 +59,6 @@ int load_fData(void){
     */
 
     FILE* fpData;
-    int   max_Operations;
     int   nBytes;
     char  buff[MAX_BUFFER];
   
@@ -130,14 +130,14 @@ void consumer(){
 
     @return int accum: accumulated cost
     */
-    int accum = 0; // accumulator
-    pthread_mutex_lock(&mutex);
+    for (int i = 0; i < max_Operations; i++){
+        int accum = 0; // accumulator
+        pthread_mutex_lock(&mutex);
 
-    while(buff_size == 0){
-        pthread_cond_wait(&cond_empty, &mutex);
-    }
+        while(buff_size == 0){
+            pthread_cond_wait(&cond_empty, &mutex);
+        }
 
-    while (!queue_empty(buff_q)){
         struct element *current = queue_get(buff_q); // get elemet
         int cost;
         /* cost calculator */
@@ -155,12 +155,13 @@ void consumer(){
             perror("Wrong type of an element");
             break;
         }
+        
         accum += cost * current->time;
-    }
-    total = total + accum;
+        total = total + accum;
 
-    pthread_cond_signal(&cond_full);
-    pthread_mutex_unlock(&mutex);
+        pthread_cond_signal(&cond_full);
+        pthread_mutex_unlock(&mutex);
+    }
 
     pthread_exit(0);
 }
@@ -263,7 +264,7 @@ int main (int argc, const char * argv[]){
     pthread_t producers[num_Producers]; // as many threads as producers
     pthread_t consumer_t;
 
-    operations_producer = (buff_size/num_Producers); // Number of operations each producer will do
+    operations_producer = (max_Operations/num_Producers); // Number of operations each producer will do
    
     printf("Paso 3\n");
     
