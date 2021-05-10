@@ -178,10 +178,9 @@ void *producer(struct fragment *partition){
     Inserts the data into the queue
     */
     printf("oppp %d\n", operations_producer);
-    printf("prnumber %d\n", *producer_number);
     struct fragment *producer_fragment = partition;
   
-    for(int i = producer_fragment->begin_position; i < procuder_fragment->end_position; i++){
+    for(int i = producer_fragment->begin_position; i < producer_fragment->end_position; i++){
 
         pthread_mutex_lock(&mutex);
 
@@ -303,14 +302,14 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 
-    struct fragment fragments[];
+    struct fragment fragments[num_Producers];
     printf("Paso 6\n");
     for (int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
 
         fragments[producer_numb].begin_position = producer_numb * operations_producer;
-        fragments[producer_numb].end_position = (procuder_numb + 1) * operations_producer;
+        fragments[producer_numb].end_position = (producer_numb + 1) * operations_producer;
 
-        if (pthread_create(&producers[producer_numb], NULL, (void *)producer, &fragments[i]) < 0){
+        if (pthread_create(&producers[producer_numb], NULL, (void *)producer, &fragments[producer_numb]) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
