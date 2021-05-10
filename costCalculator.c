@@ -22,6 +22,11 @@ struct S_DATA_MACHINE{
 
 typedef struct S_DATA_MACHINE DATA_MACHINE;
 
+struct fragment {
+  int begin_position;
+  int end_position;
+};
+
 
 /* ---
 GLOBAL DEFINITIONS
@@ -167,15 +172,16 @@ void *consumer(){
 }
 
 
-void *producer(int *producer_number){
+void *producer(struct fragment *partition){
     /*
     Producer function.
     Inserts the data into the queue
     */
     printf("oppp %d\n", operations_producer);
     printf("prnumber %d\n", *producer_number);
+    struct fragment *producer_fragment = partition;
   
-    for(int i = 0; i < operations_producer; i++){
+    for(int i = producer_fragment->begin_position; i < procuder_fragment->end_position; i++){
 
         pthread_mutex_lock(&mutex);
 
@@ -197,7 +203,7 @@ void *producer(int *producer_number){
 
         if ( index>0 && index<num_Operations) {
 
-        DATA_MACHINE current = array_Operations[(*producer_number * operations_producer) + i]; // extract element
+        DATA_MACHINE current = array_Operations[i]; // extract element
         //struct element *new_element; // element to be inserted on queue
 
         //new_element->type = current.machine_Type; // insert type
@@ -297,16 +303,20 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 
-
+    struct fragment fragments[];
     printf("Paso 6\n");
     for (int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
-        if (pthread_create(&producers[producer_numb], NULL, (void *)producer, &producer_numb) < 0){
+
+        fragments[producer_numb].begin_position = producer_numb * operations_producer;
+        fragments[producer_number].end_position = (procuder_numb + 1) * operations_producer;
+
+        if (pthread_create(&producers[producer_numb], NULL, (void *)producer, &fragments[i]) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
     }
     
-    printf("Total: %i €.\n", total);
+    
     printf("Paso 7\n");
     for (int i = 0; i < num_Producers; i++){
          if (pthread_join(producers[i], NULL) < 0){
@@ -321,6 +331,7 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
     
+    printf("Total: %i €.\n", total);
     printf("Paso 9\n");
     queue_destroy(buff_q);
     if (pthread_mutex_destroy(&mutex) < 0){
