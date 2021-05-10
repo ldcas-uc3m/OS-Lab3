@@ -123,7 +123,7 @@ int check_Params(const char* sProducers,const char* sbSize){
 }
 
 
-void consumer(){
+void *consumer(){
     /*
     Consumer function.
     Takes all the elements from the queue and calculates the cost.
@@ -167,7 +167,7 @@ void consumer(){
 }
 
 
-void producer(int *producer_number){
+void *producer(int *producer_number){
     /*
     Producer function.
     Inserts the data into the queue
