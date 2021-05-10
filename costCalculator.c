@@ -199,8 +199,6 @@ void *producer(struct fragment *partition){
         //printf("i: %d\n",i);
         
 
-        if ( index>0 && index<num_Operations) {
-
         DATA_MACHINE current = array_Operations[i]; // extract element
         //struct element *new_element; // element to be inserted on queue
 
@@ -212,16 +210,11 @@ void *producer(struct fragment *partition){
         new_element.type = current.machine_Type; // insert type
         new_element.time = current.machine_Time;
         queue_put(buff_q, &new_element);
-        }
-
-        else {
-            printf("ERROR DE INDICE: %ld\n",index);
-        }
+        
             //queue_put(buff_q, new_element);
         pthread_cond_signal(&cond_empty);
 
         pthread_mutex_unlock(&mutex);
- 
     }
 
     pthread_exit(0);
