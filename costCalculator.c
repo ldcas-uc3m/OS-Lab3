@@ -191,7 +191,7 @@ void *producer(int *producer_number){
         //printf("*producer_number: %d\n",*producer_number);
         //printf("operations_producers: %d\n",operations_producer);
         //printf("i: %d\n",i);
-        index = (producer_number * operations_producer) + i;
+        index = (*producer_number * operations_producer) + i;
         printf("%ld\n", index);
         
 
@@ -267,9 +267,11 @@ int main (int argc, const char * argv[]){
     pthread_t producers[num_Producers]; // as many threads as producers
     pthread_t consumer_t;
 
-    printf("MAX: %d\n", max_Operations);
+    printf("oppp: %d\n", operations_producer);
 
     operations_producer = (max_Operations/num_Producers); // Number of operations each producer will do
+
+    printf("oppp: %d\n", operations_producer);
    
     printf("Paso 3\n");
     
@@ -305,7 +307,6 @@ int main (int argc, const char * argv[]){
             exit(-1);
         }
     }
-
     
     printf("Total: %i €.\n", total);
     printf("Paso 7\n");
@@ -321,10 +322,7 @@ int main (int argc, const char * argv[]){
         perror("Error when waiting the thread");
         exit(-1);
     }
-
-    /* output */
     
-
     printf("Paso 9\n");
     queue_destroy(buff_q);
     if (pthread_mutex_destroy(&mutex) < 0){
