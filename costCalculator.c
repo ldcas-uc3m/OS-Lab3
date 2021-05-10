@@ -172,6 +172,7 @@ void producer(int *producer_number){
     Producer function.
     Inserts the data into the queue
     */
+    printf("%d\n", operations_producer);
   
     for(int i = 0; i < operations_producer; i++){
 
