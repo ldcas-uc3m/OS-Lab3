@@ -167,7 +167,7 @@ void consumer(){
 }
 
 
-void producer(int *num_execution){
+void producer(int *producer_number){
     /*
     Producer function.
     Inserts the data into the queue
@@ -184,18 +184,18 @@ void producer(int *num_execution){
 
 
         // ------------------------------------------------
-        // EN ALGUNOS CASOS   (*num_execution * operations_producer) + i GENERA UN VALOR ERRONEO CON EL QUE NO SE PUEDE INDEXAR EN array_Operations
+        // EN ALGUNOS CASOS   (*producer_number * operations_producer) + i GENERA UN VALOR ERRONEO CON EL QUE NO SE PUEDE INDEXAR EN array_Operations
         // ------------------------------------------------
         long int index;
-        //printf("*num_execution: %d\n",*num_execution);
+        //printf("*producer_number: %d\n",*producer_number);
         //printf("operations_producers: %d\n",operations_producer);
         //printf("i: %d\n",i);
-        index = (*num_execution * operations_producer) + i;
+        index = (*producer_number * operations_producer) + i;
         
 
         if ( index>0 && index<num_Operations) {
 
-        DATA_MACHINE current = array_Operations[(*num_execution * operations_producer) + i]; // extract element
+        DATA_MACHINE current = array_Operations[(*producer_number * operations_producer) + i]; // extract element
         //struct element *new_element; // element to be inserted on queue
 
         //new_element->type = current.machine_Type; // insert type
@@ -206,14 +206,15 @@ void producer(int *num_execution){
         new_element.type = current.machine_Type; // insert type
         new_element.time = current.machine_Time;
         queue_put(buff_q, &new_element);
-       }
-    else {
-    printf("ERROR DE INDICE: %ld\n",index);
-    }
-        //queue_put(buff_q, new_element);
-        pthread_cond_signal(&cond_empty);
+        }
 
-        pthread_mutex_unlock(&mutex);
+        else {
+            printf("ERROR DE INDICE: %ld\n",index);
+        }
+            //queue_put(buff_q, new_element);
+            pthread_cond_signal(&cond_empty);
+
+            pthread_mutex_unlock(&mutex);
  
     }
 
@@ -303,13 +304,14 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 
+    printf("Total: %i €.\n", total);
     printf("Paso 7\n");
     for (int i = 0; i < num_Producers; i++){
          if (pthread_join(producers[i], NULL) < 0){
-             perror("Error when waiting thread");
-             exit(-1);
-         }
-     }
+            perror("Error when waiting thread");
+            exit(-1);
+        }
+    }
 
     printf("Paso 8\n");
     if (pthread_join(consumer_t, NULL) < 0){
@@ -318,7 +320,7 @@ int main (int argc, const char * argv[]){
     }
 
     /* output */
-    printf("Total: %i €.\n", total);
+    
 
     printf("Paso 9\n");
     queue_destroy(buff_q);
