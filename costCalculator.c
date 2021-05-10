@@ -265,6 +265,12 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
     
+    pthread_t consumer_t;
+
+    if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
+        perror("Error when creating the thread");
+        exit(-1);
+    }
 
     operations_producer = max_Operations / num_Producers; // Number of operations each producer will do
     int leftovers = max_Operations % num_Producers;
@@ -274,33 +280,19 @@ int main (int argc, const char * argv[]){
         struct fragment fragments[num_Producers + 1]; // parameter for the treads
         pthread_t producers[num_Producers + 1];
 
-    } else{
-        struct fragment fragments[num_Producers];
-        pthread_t producers[num_Producers]; // as many threads as producers
-    }
+        /* assigning fragments & thread creation */
+        for(int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
 
-    pthread_t consumer_t;
+            fragments[producer_numb].begin_position = producer_numb * operations_producer;
+            fragments[producer_numb].end_position = (producer_numb + 1) * operations_producer;
 
-    if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
-        perror("Error when creating the thread");
-        exit(-1);
-    }
-
-    /* assigning fragments & thread creation */
-
-    for (int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
-
-        fragments[producer_numb].begin_position = producer_numb * operations_producer;
-        fragments[producer_numb].end_position = (producer_numb + 1) * operations_producer;
-
-        if (pthread_create(&producers[producer_numb], NULL, (void *)producer,
-            &fragments[producer_numb]) < 0){
-            perror("Error when creating the thread");
-            exit(-1);
+            if (pthread_create(&producers[producer_numb], NULL, (void *)producer,
+                &fragments[producer_numb]) < 0){
+                perror("Error when creating the thread");
+                exit(-1);
+            }
         }
-    }
 
-    if(leftovers){
         /* assign leftover machines */
         fragments[num_Producers + 1].begin_position = num_Producers * operations_producer;
         fragments[num_Producers + 1].end_position = max_Operations;
@@ -308,6 +300,24 @@ int main (int argc, const char * argv[]){
             &fragments[num_Producers + 1]) < 0){
             perror("Error when creating the thread");
             exit(-1);
+        }
+    }
+
+    } else{
+        struct fragment fragments[num_Producers];
+        pthread_t producers[num_Producers]; // as many threads as producers
+
+        /* assigning fragments & thread creation */
+        for(int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
+
+            fragments[producer_numb].begin_position = producer_numb * operations_producer;
+            fragments[producer_numb].end_position = (producer_numb + 1) * operations_producer;
+
+            if (pthread_create(&producers[producer_numb], NULL, (void *)producer,
+                &fragments[producer_numb]) < 0){
+                perror("Error when creating the thread");
+                exit(-1);
+            }
         }
     }
 
