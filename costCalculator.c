@@ -291,8 +291,14 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 	
-
     printf("Paso 5\n");
+    if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
+        perror("Error when creating the thread");
+        exit(-1);
+    }
+
+
+    printf("Paso 6\n");
     for (int i = 0; i < num_Producers; i++){
         if (pthread_create(&producers[i], NULL, (void *)producer, &i) < 0){
             perror("Error when creating the thread");
@@ -300,12 +306,7 @@ int main (int argc, const char * argv[]){
         }
     }
 
-    printf("Paso 6\n");
-    if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
-        perror("Error when creating the thread");
-        exit(-1);
-    }
-
+    
     printf("Total: %i €.\n", total);
     printf("Paso 7\n");
     for (int i = 0; i < num_Producers; i++){
