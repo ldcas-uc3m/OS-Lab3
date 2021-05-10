@@ -299,8 +299,8 @@ int main (int argc, const char * argv[]){
 
 
     printf("Paso 6\n");
-    for (int i = 0; i < num_Producers; i++){
-        if (pthread_create(&producers[i], NULL, (void *)producer, &i) < 0){
+    for (int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
+        if (pthread_create(&producers[producer_numb], NULL, (void *)producer, &producer_numb) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
