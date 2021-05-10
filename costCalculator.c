@@ -155,7 +155,7 @@ void consumer(){
             perror("Wrong type of an element");
             break;
         }
-        
+
         accum += cost * current->time;
         total = total + accum;
 
@@ -315,6 +315,9 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
 
+    /* output */
+    printf("Total: %i €.\n", total);
+
     printf("Paso 9\n");
     queue_destroy(buff_q);
     if (pthread_mutex_destroy(&mutex) < 0){
@@ -336,9 +339,6 @@ int main (int argc, const char * argv[]){
 
     printf("Paso 12\n");
 
-
-    /* output */
-	printf("Total: %i €.\n", total);
 	return 0;
 }
      
