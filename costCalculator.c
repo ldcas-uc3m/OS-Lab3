@@ -191,7 +191,7 @@ void *producer(int *producer_number){
         //printf("*producer_number: %d\n",*producer_number);
         //printf("operations_producers: %d\n",operations_producer);
         //printf("i: %d\n",i);
-        index = (*producer_number * operations_producer) + i;
+        index = (producer_number * operations_producer) + i;
         printf("%ld\n", index);
         
 
