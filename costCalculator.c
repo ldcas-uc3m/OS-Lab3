@@ -173,6 +173,7 @@ void *producer(int *producer_number){
     Inserts the data into the queue
     */
     printf("oppp %d\n", operations_producer);
+    printf("prnumber %d\n", *producer_number);
   
     for(int i = 0; i < operations_producer; i++){
 
@@ -192,7 +193,6 @@ void *producer(int *producer_number){
         //printf("operations_producers: %d\n",operations_producer);
         //printf("i: %d\n",i);
         index = (*producer_number * operations_producer) + i;
-        printf("%ld\n", index);
         
 
         if ( index>0 && index<num_Operations) {
@@ -214,9 +214,9 @@ void *producer(int *producer_number){
             printf("ERROR DE INDICE: %ld\n",index);
         }
             //queue_put(buff_q, new_element);
-            pthread_cond_signal(&cond_empty);
+        pthread_cond_signal(&cond_empty);
 
-            pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&mutex);
  
     }
 
