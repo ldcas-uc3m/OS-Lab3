@@ -15,6 +15,9 @@ TYPE & STRUCT DEFINITION
 --- */
 
 struct S_DATA_MACHINE{
+    /*
+    Contains the data for each machine
+    */
    int machine_ID;          // Machine ID
    int machine_Type;        // Machine Type
    int machine_Time;        // Machine Time
@@ -22,9 +25,12 @@ struct S_DATA_MACHINE{
 
 typedef struct S_DATA_MACHINE DATA_MACHINE;
 
-struct fragment {
-  int begin_position;
-  int end_position;
+struct fragment{
+    /*
+    Contains the positions each producer has to execute
+    */
+    int begin_position;
+    int end_position;
 };
 
 
@@ -136,10 +142,11 @@ void *consumer(){
     @return int accum: accumulated cost
     */
     for (int i = 0; i < max_Operations; i++){
-        int accum = 0; // accumulator
-        pthread_mutex_lock(&mutex);
 
-        while(buff_q->size == 0){
+        pthread_mutex_lock(&mutex); // lock mutex
+
+        while(queue_empty(buff_q)){
+            /* wait for queue to fill up */
             pthread_cond_wait(&cond_empty, &mutex);
         }
 
@@ -161,14 +168,14 @@ void *consumer(){
             break;
         }
 
-        accum += cost * current->time;
-        total = total + accum;
+        total += cost * current->time;
 
+        /* unlock */
         pthread_cond_signal(&cond_full);
         pthread_mutex_unlock(&mutex);
     }
 
-    pthread_exit(0);
+    pthread_exit(0); // terminate thread
 }
 
 
@@ -177,49 +184,30 @@ void *producer(struct fragment *partition){
     Producer function.
     Inserts the data into the queue
     */
-    printf("oppp %d\n", operations_producer);
     struct fragment *producer_fragment = partition;
   
     for(int i = producer_fragment->begin_position; i < producer_fragment->end_position; i++){
 
         pthread_mutex_lock(&mutex);
 
-        while(buff_q->size == buff_size){
+        while(queue_full(buff_q)){
             pthread_cond_wait(&cond_full, &mutex);
         }
 
-
-
-        // ------------------------------------------------
-        // EN ALGUNOS CASOS   (*producer_number * operations_producer) + i GENERA UN VALOR ERRONEO CON EL QUE NO SE PUEDE INDEXAR EN array_Operations
-        // ------------------------------------------------
-        long int index;
-        //printf("*producer_number: %d\n",*producer_number);
-        //printf("operations_producers: %d\n",operations_producer);
-        //printf("i: %d\n",i);
-        
-
+        /* Insert element into queue */
         DATA_MACHINE current = array_Operations[i]; // extract element
-        //struct element *new_element; // element to be inserted on queue
-
-        //new_element->type = current.machine_Type; // insert type
-        //new_element->time = current.machine_Time;
-
-        struct element new_element; // element to be ins     erted on queue
-
+        struct element new_element; // element to be inserted on queue
         new_element.type = current.machine_Type; // insert type
         new_element.time = current.machine_Time;
         queue_put(buff_q, &new_element);
         
-            //queue_put(buff_q, new_element);
+        /* unlock */
         pthread_cond_signal(&cond_empty);
-
         pthread_mutex_unlock(&mutex);
     }
 
     pthread_exit(0);
 }
-
 
 
 int main (int argc, const char * argv[]){
@@ -237,7 +225,6 @@ int main (int argc, const char * argv[]){
     check_producers = 0;
     bSize = 0;
 
-    printf("Paso 1\n");
     /* check parameters */
 	if (argc != 4){
       	perror("Wrong number of parameters");
@@ -253,7 +240,7 @@ int main (int argc, const char * argv[]){
        	perror("Error loading data from file");
        	return -1;
     }
-    printf("Paso 2\n");
+
     int num_Producers = atoi(argv[2]);
     buff_size = atoi(argv[3]);
 
@@ -261,17 +248,7 @@ int main (int argc, const char * argv[]){
     THREAD CREATION
     --- */
 
-    pthread_t producers[num_Producers]; // as many threads as producers
-    pthread_t consumer_t;
-
-
-    operations_producer = max_Operations / num_Producers; // Number of operations each producer will do
-
-   
-    printf("Paso 3\n");
-    
-    buff_q = queue_init(buff_size);
-    printf("Paso 4\n");
+    buff_q = queue_init(buff_size); // initialize queue
 
    	if (pthread_mutex_init(&mutex, NULL) < 0){
         perror("Error initializing mutex");
@@ -287,62 +264,88 @@ int main (int argc, const char * argv[]){
         perror("Error creating condition");
         exit(-1);
     }
-	
-    printf("Paso 5\n");
+    
+
+    operations_producer = max_Operations / num_Producers; // Number of operations each producer will do
+    int leftovers = max_Operations % num_Producers;
+
+    if(leftovers){
+        /* create an extra thread for leftovers */
+        struct fragment fragments[num_Producers + 1]; // parameter for the treads
+        pthread_t producers[num_Producers + 1];
+
+    } else{
+        struct fragment fragments[num_Producers];
+        pthread_t producers[num_Producers]; // as many threads as producers
+    }
+
+    pthread_t consumer_t;
+
     if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
         perror("Error when creating the thread");
         exit(-1);
     }
 
-    struct fragment fragments[num_Producers];
-    printf("Paso 6\n");
+    /* assigning fragments & thread creation */
+
     for (int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
 
         fragments[producer_numb].begin_position = producer_numb * operations_producer;
         fragments[producer_numb].end_position = (producer_numb + 1) * operations_producer;
 
-        if (pthread_create(&producers[producer_numb], NULL, (void *)producer, &fragments[producer_numb]) < 0){
+        if (pthread_create(&producers[producer_numb], NULL, (void *)producer,
+            &fragments[producer_numb]) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
     }
+
+    if(leftovers){
+        /* assign leftover machines */
+        fragments[num_Producers + 1].begin_position = num_Producers * operations_producer;
+        fragments[num_Producers + 1].end_position = max_Operations;
+        if (pthread_create(&producers[num_Producers + 1], NULL, (void *)producer,
+            &fragments[num_Producers + 1]) < 0){
+            perror("Error when creating the thread");
+            exit(-1);
+        }
+    }
+
     
-    
-    printf("Paso 7\n");
+    /* ---
+    DESTROY THREADS AND MUTEX
+    --- */
+
     for (int i = 0; i < num_Producers; i++){
-         if (pthread_join(producers[i], NULL) < 0){
+        if (pthread_join(producers[i], NULL) < 0){
             perror("Error when waiting thread");
             exit(-1);
         }
     }
 
-    printf("Paso 8\n");
     if (pthread_join(consumer_t, NULL) < 0){
         perror("Error when waiting the thread");
         exit(-1);
     }
     
     printf("Total: %i €.\n", total);
-    printf("Paso 9\n");
+
     queue_destroy(buff_q);
     if (pthread_mutex_destroy(&mutex) < 0){
         perror("Error when destroying mutex");
         exit(-1);
     }
 
-    printf("Paso 10\n");
     if (pthread_cond_destroy(&cond_full) < 0){
         perror("Error when destroying condition");
         exit(-1);
     }
 
-    printf("Paso 11\n");
     if (pthread_cond_destroy(&cond_empty) < 0){
         perror("Error when destroying condition");
         exit(-1);
     }
 
-    printf("Paso 12\n");
 
 	return 0;
 }
