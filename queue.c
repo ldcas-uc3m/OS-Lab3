@@ -86,7 +86,7 @@ struct element* queue_get(queue *q){
 
         return new_element;
     }
-    return -1;
+    perror("Error");
 }
 
 

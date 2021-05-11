@@ -294,10 +294,10 @@ int main (int argc, const char * argv[]){
         }
 
         /* assign leftover machines */
-        fragments[num_Producers + 1].begin_position = num_Producers * operations_producer;
-        fragments[num_Producers + 1].end_position = max_Operations;
-        if (pthread_create(&producers[num_Producers + 1], NULL, (void *)producer,
-            &fragments[num_Producers + 1]) < 0){
+        fragments[num_Producers].begin_position = num_Producers * operations_producer;
+        fragments[num_Producers].end_position = max_Operations;
+        if (pthread_create(&producers[num_Producers], NULL, (void *)producer,
+            &fragments[num_Producers]) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
