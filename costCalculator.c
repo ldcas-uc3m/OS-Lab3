@@ -48,18 +48,14 @@ Global Variables
 --- */
 
 const char *fNameData;
-int bSize;
-int check_producers;
 int num_Operations = -1;
-int operations_producer = 0;
-int buff_size = 0;
 int max_Operations = 0;
 int total;
 DATA_MACHINE* array_Operations;
 pthread_mutex_t mutex;
 pthread_cond_t cond_full;
 pthread_cond_t cond_empty;
-struct queue *buff_q;
+struct queue *circular_queue;
 
 
 int load_fData(void){
@@ -113,13 +109,14 @@ int load_fData(void){
     }
 }
 
-int check_Params(const char* sProducers,const char* sbSize){
+int check_Params(const char* sProducers, const char* sbSize){
     /*
     Checks that all parameters for the main process are correct
 
     @returns: 0 if no error, -1 on error
     */
-    check_producers = atoi(sProducers);
+    int bSize = 0;
+    int check_producers = atoi(sProducers);
 
     if (check_producers <= 0){
         return -1;
@@ -143,19 +140,19 @@ void *consumer(){
     */
     for (int i = 0; i < max_Operations; i++){
 
-        pthread_mutex_lock(&mutex); // lock mutex
+        pthread_mutex_lock(&mutex); // lock the critical section with mutex
 
-        while(queue_empty(buff_q)){
+        while(queue_empty(circular_queue)){
             /* wait for queue to fill up */
             pthread_cond_wait(&cond_empty, &mutex);
         }
 
-        struct element *current = queue_get(buff_q); // get elemet
+        struct element *current = queue_get(circular_queue); // get element from the circular queue 
         int cost;
         /* cost calculator */
         switch (current->type){
         case 1: /* common node */
-            cost = 1; // ($/min)
+            cost = 1; 
             break;
         case 2: /* computer node */
             cost = 3;
@@ -168,9 +165,10 @@ void *consumer(){
             break;
         }
 
+        /* update the total */
         total += cost * current->time;
 
-        /* unlock */
+        /* unlock the critical section */
         pthread_cond_signal(&cond_full);
         pthread_mutex_unlock(&mutex);
     }
@@ -188,25 +186,27 @@ void *producer(struct fragment *partition){
   
     for(int i = producer_fragment->begin_position; i < producer_fragment->end_position; i++){
 
+        /* locking the critical section with the mutex */
         pthread_mutex_lock(&mutex);
 
-        while(queue_full(buff_q)){
+        while(queue_full(circular_queue)){
+            /* while the circular queue is full there cannot be any insertions of the producers*/
             pthread_cond_wait(&cond_full, &mutex);
         }
 
         /* Insert element into queue */
         DATA_MACHINE current = array_Operations[i]; // extract element
         struct element new_element; // element to be inserted on queue
-        new_element.type = current.machine_Type; // insert type
-        new_element.time = current.machine_Time;
-        queue_put(buff_q, &new_element);
+        new_element.type = current.machine_Type; // get the type of machine
+        new_element.time = current.machine_Time; // get the machine time
+        queue_put(circular_queue, &new_element); //enqueue the element in the circular buffer
         
-        /* unlock */
+        /* unlock the critical section */
         pthread_cond_signal(&cond_empty);
         pthread_mutex_unlock(&mutex);
     }
 
-    pthread_exit(0);
+    pthread_exit(0); // end the thread
 }
 
 
@@ -222,8 +222,6 @@ int main (int argc, const char * argv[]){
     fNameData = argv[1];
     num_Operations = -1;
     array_Operations = NULL;
-    check_producers = 0;
-    bSize = 0;
 
     /* check parameters */
 	if (argc != 4){
@@ -241,15 +239,14 @@ int main (int argc, const char * argv[]){
        	return -1;
     }
 
-    int num_Producers = atoi(argv[2]);
-    buff_size = atoi(argv[3]);
+    int number_Producers = atoi(argv[2]);
+    int buff_size = atoi(argv[3]);
 
-    /* ---
-    THREAD CREATION
-    --- */
+    
+    /* Initialize queue */
+    circular_queue = queue_init(buff_size); 
 
-    buff_q = queue_init(buff_size); // initialize queue
-
+    /* Initialize mutex and conditions */
    	if (pthread_mutex_init(&mutex, NULL) < 0){
         perror("Error initializing mutex");
         exit(-1);
@@ -265,43 +262,44 @@ int main (int argc, const char * argv[]){
         exit(-1);
     }
     
-    pthread_t consumer_t;
+    /* Creation of thread consumer */
+    pthread_t consumer_thread;
 
-    if (pthread_create(&consumer_t, NULL, (void *)consumer, NULL) < 0){
+    if (pthread_create(&consumer_thread, NULL, (void *)consumer, NULL) < 0){
         perror("Error when creating the thread");
         exit(-1);
     }
+    /* Number of operations each producer will do */
+    int operations_producer = max_Operations / number_Producers; 
 
-    operations_producer = max_Operations / num_Producers; // Number of operations each producer will do
-    int leftovers = max_Operations % num_Producers;
+    /* Calculate leftovers */
+    int leftovers = max_Operations % number_Producers;          
 
     if(leftovers){
         /* create an extra thread for leftovers */
-        struct fragment fragments[num_Producers + 1]; // parameter for the treads
-        pthread_t producers[num_Producers + 1];
+        struct fragment fragments[number_Producers + 1]; // parameter for the treads
+        pthread_t producers[number_Producers + 1];
 
         /* assigning fragments & thread creation */
-        for(int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
+        for(int producer_id = 0; producer_id < number_Producers; producer_id++){
 
-            fragments[producer_numb].begin_position = producer_numb * operations_producer;
-            fragments[producer_numb].end_position = (producer_numb + 1) * operations_producer;
+            fragments[producer_id].begin_position = producer_id * operations_producer;
+            fragments[producer_id].end_position = (producer_id + 1) * operations_producer;
 
-            if (pthread_create(&producers[producer_numb], NULL, (void *)producer,
-                &fragments[producer_numb]) < 0){
+            if (pthread_create(&producers[producer_id], NULL, (void *)producer, &fragments[producer_id]) < 0){
                 perror("Error when creating the thread");
                 exit(-1);
             }
         }
 
         /* assign leftover machines */
-        fragments[num_Producers].begin_position = num_Producers * operations_producer;
-        fragments[num_Producers].end_position = max_Operations;
-        if (pthread_create(&producers[num_Producers], NULL, (void *)producer,
-            &fragments[num_Producers]) < 0){
+        fragments[number_Producers].begin_position = number_Producers * operations_producer;
+        fragments[number_Producers].end_position = max_Operations;
+        if (pthread_create(&producers[number_Producers], NULL, (void *)producer, &fragments[number_Producers]) < 0){
             perror("Error when creating the thread");
             exit(-1);
         }
-        for (int i = 0; i < num_Producers+1; i++){
+        for (int i = 0; i < number_Producers + 1; i++){
             if (pthread_join(producers[i], NULL) < 0){
                 perror("Error when waiting thread");
                 exit(-1);
@@ -310,22 +308,23 @@ int main (int argc, const char * argv[]){
     }
 
     else{
-        struct fragment fragments[num_Producers];
-        pthread_t producers[num_Producers]; // as many threads as producers
+        /* If there are not leftovers */
+        struct fragment fragments[number_Producers];
+        pthread_t producers[number_Producers]; // as many threads as producers
 
         /* assigning fragments & thread creation */
-        for(int producer_numb = 0; producer_numb < num_Producers; producer_numb++){
+        for(int producer_id = 0; producer_id < number_Producers; producer_id ++){
 
-            fragments[producer_numb].begin_position = producer_numb * operations_producer;
-            fragments[producer_numb].end_position = (producer_numb + 1) * operations_producer;
+            fragments[producer_id].begin_position = producer_id * operations_producer;
+            fragments[producer_id].end_position = (producer_id + 1) * operations_producer;
 
-            if (pthread_create(&producers[producer_numb], NULL, (void *)producer,
-                &fragments[producer_numb]) < 0){
+            if (pthread_create(&producers[producer_id], NULL, (void *)producer, &fragments[producer_id]) < 0){
                 perror("Error when creating the thread");
                 exit(-1);
             }
         }
-        for (int i = 0; i < num_Producers; i++){
+        /* Thread join */
+        for (int i = 0; i < number_Producers; i++){
             if (pthread_join(producers[i], NULL) < 0){
                 perror("Error when waiting thread");
                 exit(-1);
@@ -333,21 +332,18 @@ int main (int argc, const char * argv[]){
         }
     }
 
-    
-    /* ---
-    DESTROY THREADS AND MUTEX
-    --- */
 
-    
-
-    if (pthread_join(consumer_t, NULL) < 0){
+    if (pthread_join(consumer_thread, NULL) < 0){
         perror("Error when waiting the thread");
         exit(-1);
     }
     
+    /* Print total */
     printf("Total: %i €.\n", total);
 
-    queue_destroy(buff_q);
+
+    /* Destroy circular buffer and mutex and coditions */
+    queue_destroy(circular_queue);
     if (pthread_mutex_destroy(&mutex) < 0){
         perror("Error when destroying mutex");
         exit(-1);
